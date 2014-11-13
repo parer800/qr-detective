@@ -43,9 +43,6 @@ function bw = adaptivethres(in)
             end
         end
     end
-    imshow(bw);
-    figure;
-    imshow(in);
     
     %imshow(bw);
     
