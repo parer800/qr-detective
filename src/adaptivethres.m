@@ -7,7 +7,7 @@ function bw = adaptivethres(in)
     intImg = integralImage(in);
     s=w/8;
     t = 15;
-    
+    bw = ones(w,h);
     for i=1:w
         for j=1:h
             sHalf = floor(s/2);
@@ -38,8 +38,6 @@ function bw = adaptivethres(in)
             sum = intImg(x2,y2) - intImg(x2,y1-1) - intImg(x1-1,y2) + intImg(x1-1,y1-1);
             if in(i,j)*count <= (sum*(100-t)/100)
                 bw(i,j) = 0;
-            else
-                bw(i,j) = 255;
             end
         end
     end

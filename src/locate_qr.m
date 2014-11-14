@@ -1,9 +1,19 @@
-function [ result_image, qr_locations ] = locate_qr( in, direction )
+function [ result_image, qr_locations ] = locate_qr( in, verticalDirection )
 %LOCATE_QR Summary of this function goes here
 %   Detailed explanation goes here
-    if(direction)
+    if(verticalDirection)
         in = in'; % Transpose the image if we want to check vertically, instead of rewriting the loop for that case
+        figure;
+        imshow(in);
     end
+    
+    
+    function A = swap_rows(A,i,j)
+       % assert(i > 0 && i < size(A,1) && j > 0 && j < size(A,1) );
+        TEMP = A([j i], :);
+        A([i j], :) = TEMP; % Notice the difference of i & j
+    end
+    
 
     width = size(in,2);
     height = size(in,1);
@@ -15,6 +25,7 @@ function [ result_image, qr_locations ] = locate_qr( in, direction )
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     %Store in block of 4: [x,y,colorSeq, counterSeq]
+    
     segment = -ones(4,height*width);
     color_switch = in(1,1);
     sequence_counter = 0;
@@ -25,16 +36,16 @@ function [ result_image, qr_locations ] = locate_qr( in, direction )
         color_switch = in(y,1); % reset for every loop in Y-led
         for x=1:width
             %IF color has switched, store previous sequence in segment
-            current_h = in(y,x);
-            if current_h ~= color_switch
+            if in(y,x) ~= color_switch
                 %Color has switched
                 component = [x-1,y,color_switch, sequence_counter]';
                 segment(:,ticker) = component;
                 ticker = ticker+1;
                 sequence_counter = 0;
-                color_switch = current_h;
-            end
+                color_switch = in(y,x);
+            else
                 sequence_counter = sequence_counter + 1;
+            end
         end
     end
     
@@ -73,7 +84,7 @@ function [ result_image, qr_locations ] = locate_qr( in, direction )
             lc = c/l; %center-left ratio
             rc = c/r; %center-right ratio
             cn = 3; %Normalized center weight
-            faultPercentage = 0.5;
+            faultPercentage = 1.5;
 
             cnlc = abs(cn-lc);
             cnrc = abs(cn-rc);
@@ -104,8 +115,9 @@ function [ result_image, qr_locations ] = locate_qr( in, direction )
 
     end
     
-    if(direction)
+    if(verticalDirection)
         result_image = result_image'; % Transpose the image if we want to check vertically, instead of rewriting the loop for that case
+        qr_locations = swap_rows(qr_locations, 1,2);
     end
 
 
