@@ -28,8 +28,11 @@ else
 end
 %adaptive threshold image
 atImage = adaptivethres(double(BW));
+atImage_unfiltered = atImage;
 imshow(atImage);
 atImage = medfilt2(atImage,[3 3]);
+figure;
+imshow(atImage);
 
 
 [H, T, R] = hough(atImage);
@@ -83,37 +86,204 @@ figure, imshow(K)
 %Find center points
 
 %Hopefully we found 3 components which match our criteria
-[i, j] = find(L);
+[i, j] = find(L)
 size(i,1)
 size(j,1)
 
 %Divide into grouped segments
-connected = bwlabel(L,4);
+connected = bwlabel(L,8);
 
 [r, c] = find(connected == 1);
 rc = [r c];
-P1 = mean(rc);
+P1 = mean(rc)'
 
 [r, c] = find(connected == 2);
 rc = [r c];
-P2 = mean(rc);
+P2 = mean(rc)'
 
 [r, c] = find(connected == 3);
-rc = [r c];
-P3 = mean(rc);
+rc = [r c]
+P3 = mean(rc)'
+
+
+%Check which point should be P1 and P2
+P21 = P2-P1;
+P31 = P3-P1;
+
+P12 = P1-P2;
+P32 = P3-P2;
+
+P21x31 = P21' * P31;
+P12x32 = P12' * P32;
+
+%Lowest dot value (probably 0) of P21x31 is perpendicular to P3 which
+%should be P1
+if(P21x31 > P12x32)
+    temp = P1;
+    P1 = P2;
+    P2 = temp;
+end
+
 
 figure;
 imshow(I);
 hold on;
-plot(P1(2), P1(1), 'o');
-plot(P2(2), P2(1), 'o');
-plot(P3(2), P3(1), 'o');
+plot(P1(2), P1(1), 'ro');
+plot(P2(2), P2(1), 'go');
+plot(P3(2), P3(1), 'bo');
 
 
 
 
 
+P = (P3-P1)';
+Pn = norm(P)
+P
+xaxis = [0 1]'
 
+P * xaxis
+px = P*xaxis
+theta = acos((P*xaxis)/Pn);
+thetaDegrees = rad2deg(theta)
+
+
+Irotate = imrotate(BW, thetaDegrees);
+Irotate = adaptivethres(double(Irotate));
+costheta = cos(theta);
+sintheta = sin(theta);
+rotmatrix = [costheta -sintheta; sintheta costheta]'
+Ptot = [P1'; P2'; P3']
+
+
+xmiddle = size(Irotate, 2)/2
+ymiddle = size(Irotate, 1)/2
+
+Ptot(:,2) = Ptot(:,2) - width/2;
+Ptot(:,1) = Ptot(:,1) - height/2;
+Ptot
+Prot = Ptot * rotmatrix
+
+Prot(:,2) = Prot(:,2) + xmiddle;
+Prot(:,1) = Prot(:,1) + ymiddle;
+
+figure;
+imshow(Irotate);
+hold on;
+plot(Prot(1,2), Prot(1,1), 'ro');
+plot(Prot(2,2), Prot(2,1), 'go');
+plot(Prot(3,2), Prot(3,1), 'bo');
+
+%Angle between P2
+
+
+%================================================================
+%                   FIND CORNER POINTS
+%================================================================
+Pcorner1 = locate_corners(Irotate, Prot(1,:), [-1, -1]);
+plot(Pcorner1(2), Pcorner1(1), 'r+');
+
+Pcorner2 = locate_corners(Irotate, Prot(2,:), [-1, 1]);
+plot(Pcorner2(2), Pcorner2(1), 'g+');
+
+Pcorner3 = locate_corners(Irotate, Prot(3,:), [1, -1]);
+plot(Pcorner3(2), Pcorner3(1), 'b+');
+
+
+%================================================================
+%                   CROP IMAGE BY CORNER POINTS
+%================================================================
+xlength = Pcorner3(2) - Pcorner1(2)
+ylength = Pcorner2(1) - Pcorner1(1)
+
+Pcrop = [Pcorner1(1)+ylength, Pcorner1(2)+xlength]
+cropRange = [Pcorner1(2) Pcorner1(1) xlength ylength]
+Icrop = imcrop(Irotate, cropRange);
+figure;
+imshow(Icrop);
+
+%================================================================
+%                   TRANSLATE QR CODE TO STRING
+%================================================================
+
+finalstring = translate_qr(Icrop);
+
+% cropWidth = size(Icrop,2)
+% cropHeight = size(Icrop,1)  
+% nrOfQrBlocks = 41;
+% pixelsPerBlock = cropWidth/41
+% centerpoint = round(pixelsPerBlock/2)
+% pixelsPerBlock = round(pixelsPerBlock);
+% 
+% hold on;
+% ticker = 1;
+% 
+% centerOfApX = cropWidth-7*pixelsPerBlock + centerpoint;
+% centerOfApY = cropHeight-7*pixelsPerBlock + centerpoint;
+% plot(centerOfApX, centerOfApY, 'g+');
+% 
+% bitsequence = '';
+% bitticker = 0;
+% 
+% finalstring = '';
+% 
+% FIP_ratio = (1+1+3+1+1+1)
+% 
+% for x=centerpoint:pixelsPerBlock:cropWidth
+%     for y=centerpoint:pixelsPerBlock:cropHeight
+%         if(bitticker== 8)
+%             %Translate 8bit
+%             bitsequence
+%             value = bin2dec(bitsequence);
+%             finalstring = [finalstring char(value)];
+%             
+%             
+%             bitsequence = '';
+%             bitticker = 0;
+%         end
+%         
+%         if(abs(x-centerOfApX) <=2*pixelsPerBlock && abs(y-centerOfApY) <= 2*pixelsPerBlock) % 2 Block ratio times pixels per block should be skipped (AP-mark)
+%             continue;
+%         end
+%         if(x<= pixelsPerBlock*FIP_ratio)
+%             if(y>=pixelsPerBlock*FIP_ratio && y + pixelsPerBlock*FIP_ratio < cropHeight)
+%                 %READ
+%                 bitsequence = [bitsequence num2str(Icrop(y,x))];
+%                 bitticker = bitticker+1;
+%                 
+%                 plot(x, y, 'r.');
+%             end
+%         elseif(x + pixelsPerBlock*FIP_ratio < cropWidth)
+%             %READ
+%             bitsequence = [bitsequence num2str(Icrop(y,x))];
+%             bitticker = bitticker+1;
+%             plot(x, y, 'r.');
+%             
+%         else
+%             if(y>=pixelsPerBlock*FIP_ratio)
+%                 %READ
+%                 bitsequence = [bitsequence num2str(Icrop(y,x))];
+%                 bitticker = bitticker+1;
+%                 plot(x, y, 'r.');
+%             end
+%             continue;
+% 
+%         end
+%         
+%     end
+% end
+
+% 
+% 
+% for x:pixelsPerBlock:cropWidth
+%     for y:pixelsPerBlock:cropHeight
+%         if x <= pixelsPerBlock*(1+1+3+1+1)
+%             continue;
+%         else
+%             
+%         end
+%             
+%     end
+% end
 
 
 
@@ -156,7 +326,7 @@ plot(P3(2), P3(1), 'o');
 
 
 
-strout=char(im);
-strout = L;
+%strout=char(im);
+strout = finalstring;
 % 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
