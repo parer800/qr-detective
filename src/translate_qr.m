@@ -8,15 +8,18 @@ imshow(I);
 cropWidth = size(I,2);
 cropHeight = size(I,1);
 nrOfQrBlocks = 41;
-pixelsPerBlock = cropWidth/41
-centerpoint = round(pixelsPerBlock/2)
-pixelsPerBlock = round(pixelsPerBlock);
+pixelsPerBlockX = cropWidth/41;
+pixelsPerBlockY = cropHeight/41;
+centerpointX = round(pixelsPerBlockX/2);
+centerpointY = round(pixelsPerBlockY/2);
+pixelsPerBlockX = round(pixelsPerBlockX);
+pixelsPerBlockY = round(pixelsPerBlockY);
 
 hold on;
 ticker = 1;
 
-centerOfApX = cropWidth-7*pixelsPerBlock + centerpoint;
-centerOfApY = cropHeight-7*pixelsPerBlock + centerpoint;
+centerOfApX = cropWidth-7*pixelsPerBlockX + centerpointX;
+centerOfApY = cropHeight-7*pixelsPerBlockY + centerpointY;
 plot(centerOfApX, centerOfApY, 'g+');
 
 bitsequence = '';
@@ -26,11 +29,10 @@ finalstring = '';
 
 FIP_ratio = (1+1+3+1+1+1);
 
-for x=centerpoint:pixelsPerBlock:cropWidth
-    for y=centerpoint:pixelsPerBlock:cropHeight
+for x=centerpointX:pixelsPerBlockX:cropWidth
+    for y=centerpointY:pixelsPerBlockY:cropHeight
         if(bitticker== 8)
             %Translate 8bit
-            bitsequence
             value = bin2dec(bitsequence);
             finalstring = [finalstring char(value)];
             
@@ -39,25 +41,25 @@ for x=centerpoint:pixelsPerBlock:cropWidth
             bitticker = 0;
         end
         
-        if(abs(x-centerOfApX) <=2*pixelsPerBlock && abs(y-centerOfApY) <= 2*pixelsPerBlock) % 2 Block ratio times pixels per block should be skipped (AP-mark)
+        if(abs(x-centerOfApX) <=2*pixelsPerBlockX && abs(y-centerOfApY) <= 2*pixelsPerBlockY) % 2 Block ratio times pixels per block should be skipped (AP-mark)
             continue;
         end
-        if(x<= pixelsPerBlock*FIP_ratio)
-            if(y>=pixelsPerBlock*FIP_ratio && y + pixelsPerBlock*FIP_ratio < cropHeight)
+        if(x<= pixelsPerBlockX*FIP_ratio)
+            if(y>=pixelsPerBlockY*FIP_ratio && y + pixelsPerBlockY*FIP_ratio < cropHeight)
                 %READ
                 bitsequence = [bitsequence num2str(I(y,x))];
                 bitticker = bitticker+1;
                 
                 plot(x, y, 'r.');
             end
-        elseif(x + pixelsPerBlock*FIP_ratio < cropWidth)
+        elseif(x + pixelsPerBlockX*FIP_ratio < cropWidth)
             %READ
             bitsequence = [bitsequence num2str(I(y,x))];
             bitticker = bitticker+1;
             plot(x, y, 'r.');
             
         else
-            if(y>=pixelsPerBlock*FIP_ratio)
+            if(y>=pixelsPerBlockY*FIP_ratio)
                 %READ
                 bitsequence = [bitsequence num2str(I(y,x))];
                 bitticker = bitticker+1;

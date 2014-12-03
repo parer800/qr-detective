@@ -83,6 +83,9 @@ figure, imshow(K)
 
 %imshow(segment(:,ticker+4));
 
+
+%[largest_cluster_area, largest_cluster_label] = max([D.Area])
+
 %Find center points
 
 %Hopefully we found 3 components which match our criteria
@@ -91,17 +94,39 @@ size(i,1)
 size(j,1)
 
 %Divide into grouped segments
-connected = bwlabel(L,8);
+connected = bwlabel(L);
 
-[r, c] = find(connected == 1);
+
+%================================================================
+%                   SELECT 3 BIGGEST REGIONS
+%================================================================
+
+D = regionprops(connected, 'Area')
+area_for_regions = zeros(2, size(D,1));
+
+for i=1:size(D,1)
+    area_for_regions(:,i) = [D(i).Area, i]'; 
+end
+
+area_for_regions
+[a1, a2] = sort(area_for_regions(1,:), 'descend');
+sorted_areas = area_for_regions(:,a2)
+
+
+
+cc = bwconncomp(L);
+s = regionprops(cc, 'PixelIdxList', 'Area')
+areasss = s.Area
+
+[r, c] = find(connected == sorted_areas(2,1));
 rc = [r c];
 P1 = mean(rc)'
 
-[r, c] = find(connected == 2);
+[r, c] = find(connected == sorted_areas(2,2));
 rc = [r c];
 P2 = mean(rc)'
 
-[r, c] = find(connected == 3);
+[r, c] = find(connected == sorted_areas(2,3));
 rc = [r c]
 P3 = mean(rc)'
 
@@ -148,6 +173,10 @@ thetaDegrees = rad2deg(theta)
 
 
 Irotate = imrotate(BW, thetaDegrees);
+%Local threshold instead of adaptive
+level = graythresh(Irotate);
+Irotate = im2bw(Irotate, level);
+
 Irotate = adaptivethres(double(Irotate));
 costheta = cos(theta);
 sintheta = sin(theta);
@@ -206,86 +235,6 @@ imshow(Icrop);
 %================================================================
 
 finalstring = translate_qr(Icrop);
-
-% cropWidth = size(Icrop,2)
-% cropHeight = size(Icrop,1)  
-% nrOfQrBlocks = 41;
-% pixelsPerBlock = cropWidth/41
-% centerpoint = round(pixelsPerBlock/2)
-% pixelsPerBlock = round(pixelsPerBlock);
-% 
-% hold on;
-% ticker = 1;
-% 
-% centerOfApX = cropWidth-7*pixelsPerBlock + centerpoint;
-% centerOfApY = cropHeight-7*pixelsPerBlock + centerpoint;
-% plot(centerOfApX, centerOfApY, 'g+');
-% 
-% bitsequence = '';
-% bitticker = 0;
-% 
-% finalstring = '';
-% 
-% FIP_ratio = (1+1+3+1+1+1)
-% 
-% for x=centerpoint:pixelsPerBlock:cropWidth
-%     for y=centerpoint:pixelsPerBlock:cropHeight
-%         if(bitticker== 8)
-%             %Translate 8bit
-%             bitsequence
-%             value = bin2dec(bitsequence);
-%             finalstring = [finalstring char(value)];
-%             
-%             
-%             bitsequence = '';
-%             bitticker = 0;
-%         end
-%         
-%         if(abs(x-centerOfApX) <=2*pixelsPerBlock && abs(y-centerOfApY) <= 2*pixelsPerBlock) % 2 Block ratio times pixels per block should be skipped (AP-mark)
-%             continue;
-%         end
-%         if(x<= pixelsPerBlock*FIP_ratio)
-%             if(y>=pixelsPerBlock*FIP_ratio && y + pixelsPerBlock*FIP_ratio < cropHeight)
-%                 %READ
-%                 bitsequence = [bitsequence num2str(Icrop(y,x))];
-%                 bitticker = bitticker+1;
-%                 
-%                 plot(x, y, 'r.');
-%             end
-%         elseif(x + pixelsPerBlock*FIP_ratio < cropWidth)
-%             %READ
-%             bitsequence = [bitsequence num2str(Icrop(y,x))];
-%             bitticker = bitticker+1;
-%             plot(x, y, 'r.');
-%             
-%         else
-%             if(y>=pixelsPerBlock*FIP_ratio)
-%                 %READ
-%                 bitsequence = [bitsequence num2str(Icrop(y,x))];
-%                 bitticker = bitticker+1;
-%                 plot(x, y, 'r.');
-%             end
-%             continue;
-% 
-%         end
-%         
-%     end
-% end
-
-% 
-% 
-% for x:pixelsPerBlock:cropWidth
-%     for y:pixelsPerBlock:cropHeight
-%         if x <= pixelsPerBlock*(1+1+3+1+1)
-%             continue;
-%         else
-%             
-%         end
-%             
-%     end
-% end
-
-
 
 
 % Display & calculate the Hough matrix.
