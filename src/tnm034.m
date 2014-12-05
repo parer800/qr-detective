@@ -231,6 +231,46 @@ figure;
 imshow(Icrop);
 
 %================================================================
+%                   FIND AP MARK
+%================================================================
+APTemplate = getTemplateOfAP(Icrop);
+centerX = size(Icrop,2)/2;
+centerY = size(Icrop,1)/2;
+%AP = normxcorr2(APTemplate, Icrop(ceil(centerY):size(Icrop,1), ceil(centerX):size(Icrop, 2)));
+AP = normxcorr2(APTemplate, Icrop);
+[i j] = find(AP==max(max(AP)));
+APpos = [i j]'
+offsetAPX = size(APTemplate,2)/2;
+offsetAPY = size(APTemplate,1)/2;
+hold on;
+plot(j-offsetAPX,i-offsetAPY,'g+');
+figure;
+imshow(AP)
+
+%================================================================
+%                   PERSPECTIVE DISTORTION
+%================================================================
+movingPoints = [Pcorner1 Pcorner2 Pcorner3 APpos]
+
+%Calculate fixed points
+%Start with P1_ _ _ _ P3
+%           |
+%           | 
+%           |     
+%           P2        
+%
+PPB = (Pcorner3(2) - Pcorner1(2))/41 % Pixel per block
+
+P1f = Pcorner1
+P2f = [PPB*41; P1f(2)]
+P3f = [P1f(1); PPB*41];
+PAPf = [(P2f(1)-7)*PPB;
+        (P3f(2)-7)*PPB
+        ]
+fixedPoints = [P1f P2f P3f PAPf]
+
+
+%================================================================
 %                   TRANSLATE QR CODE TO STRING
 %================================================================
 
@@ -276,6 +316,6 @@ finalstring = translate_qr(Icrop);
 
 
 %strout=char(im);
-strout = finalstring;
+strout = AP;
 % 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
