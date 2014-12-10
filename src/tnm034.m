@@ -78,81 +78,20 @@ combined = result_image_horizontal + result_image_vertical;
 L = medfilt2(combined,[3 3]);
 %figure, imshow(L)
 
-K = filter2(fspecial('average',3),combined);
-%figure, imshow(K)
-
-%imshow(segment(:,ticker+4));
-
-
-%[largest_cluster_area, largest_cluster_label] = max([D.Area])
-
-%Find center points
+K = filter2(fspecial('average',3),combined); % <--- Not used
 
 %Hopefully we found 3 components which match our criteria
 [i, j] = find(L)
 size(i,1)
 size(j,1)
 
-%Divide into grouped segments
-connected = bwlabel(L);
+
 
 
 %================================================================
 %                   SELECT 3 BIGGEST REGIONS
 %================================================================
-
-D = regionprops(connected, 'Area')
-area_for_regions = zeros(2, size(D,1));
-
-for i=1:size(D,1)
-    area_for_regions(:,i) = [D(i).Area, i]'; 
-end
-
-area_for_regions
-if(size(D,1) > 3)
-    [a1, a2] = sort(area_for_regions(1,:), 'descend');
-    sorted_areas = area_for_regions(:,a2)
-else
-    sorted_areas = area_for_regions
-end
-
-
-
-cc = bwconncomp(L);
-s = regionprops(cc, 'PixelIdxList', 'Area')
-areasss = s.Area
-
-[r, c] = find(connected == sorted_areas(2,1));
-rc = [r c];
-P1 = mean(rc)'
-
-[r, c] = find(connected == sorted_areas(2,2));
-rc = [r c];
-P2 = mean(rc)'
-
-[r, c] = find(connected == sorted_areas(2,3));
-rc = [r c]
-P3 = mean(rc)'
-
-
-%Check which point should be P1 and P2
-P21 = P2-P1;
-P31 = P3-P1;
-
-P12 = P1-P2;
-P32 = P3-P2;
-
-P21x31 = P21' * P31;
-P12x32 = P12' * P32;
-
-%Lowest dot value (probably 0) of P21x31 is perpendicular to P3 which
-%should be P1
-if(P21x31 > P12x32)
-    temp = P1;
-    P1 = P2;
-    P2 = temp;
-end
-
+[P1, P2, P3] = find_FIP(L);
 
 figure;
 imshow(I);
@@ -162,45 +101,12 @@ plot(P2(2), P2(1), 'go');
 plot(P3(2), P3(1), 'bo');
 
 
+%================================================================
+%                   ROTATE BY FIP POINTS [P1 P2 P3]
+%================================================================
 
-
-
-P = (P3-P1)';
-Pn = norm(P)
-P
-xaxis = [0 1]'
-
-P * xaxis
-px = P*xaxis
-theta = acos((P*xaxis)/Pn);
-thetaDegrees = rad2deg(theta)
-if(P(1)<0)
-    theta = -acos((P*xaxis)/Pn);
-    thetaDegrees = -thetaDegrees
-end
-
-
-Irotate = imrotate(BW, thetaDegrees);
-%Local threshold instead of adaptive
-
-
-%Irotate = adaptivethres(double(Irotate));
-costheta = cos(theta);
-sintheta = sin(theta);
-rotmatrix = [costheta -sintheta; sintheta costheta]'
-Ptot = [P1'; P2'; P3']
-
-
-xmiddle = size(Irotate, 2)/2
-ymiddle = size(Irotate, 1)/2
-
-Ptot(:,2) = Ptot(:,2) - width/2;
-Ptot(:,1) = Ptot(:,1) - height/2;
-Ptot
-Prot = Ptot * rotmatrix
-
-Prot(:,2) = Prot(:,2) + xmiddle;
-Prot(:,1) = Prot(:,1) + ymiddle;
+[Irotate, Prot] = rotate_qr(BW, P1, P2, P3);
+Prot
 
 figure;
 imshow(Irotate);
@@ -209,12 +115,12 @@ plot(Prot(1,2), Prot(1,1), 'ro');
 plot(Prot(2,2), Prot(2,1), 'go');
 plot(Prot(3,2), Prot(3,1), 'bo');
 
-%Angle between P2
 
 
 %================================================================
 %                   FIND CORNER POINTS
 %================================================================
+
 Pcorner1 = locate_corners(Irotate, Prot(1,:), [-1, -1]);
 plot(Pcorner1(2), Pcorner1(1), 'r+');
 
@@ -226,7 +132,8 @@ plot(Pcorner3(2), Pcorner3(1), 'b+');
 
 
 %================================================================
-%                   RESIZE RATIO
+%                   RESIZE RATIO, Not necessary, can use pixel per block in
+%                   both row and col direction.
 %================================================================
 xLength = Pcorner3(2) - Pcorner1(2)
 yLength = Pcorner2(1) - Pcorner1(1)
