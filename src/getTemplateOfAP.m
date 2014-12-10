@@ -1,6 +1,5 @@
-function [ output_args ] = getTemplateOfAP( Im )
-w = size(Im, 2);
-h = size(Im, 1);
+function [ output_args ] = getTemplateOfAP( h, w )
+
 nrOfBlocks = 41;
 
 PPBX = w/nrOfBlocks %PPBX - PixelsPerBlockX
@@ -13,12 +12,12 @@ PPBX = size(APTemplate,2)/ratioOfAP;
 PPBY = size(APTemplate,1)/ratioOfAP;
 
 startSquareX = ceil(1/5 * size(APTemplate,2))+1;
-endSquareX = ceil(3/5 * size(APTemplate,2))+1;
+endSquareX = ceil(4/5 * size(APTemplate,2))+1;
 startSquareY = ceil(1/5 * size(APTemplate,1))+1;
-endSquareY = ceil(3/5 * size(APTemplate,1))+1;
+endSquareY = ceil(4/5 * size(APTemplate,1))+1;
 
-APTemplate(startSquareY:endSquareY,startSquareX:endSquareX) = 0; % all blocks on first row
-APTemplate(startSquareY+PPBY:endSquareY-1, startSquareX+PPBX:endSquareX-1 ) = 1;
+APTemplate(startSquareY:endSquareY,startSquareX:endSquareX) = 0; 
+APTemplate(startSquareY+PPBY:endSquareY-1*PPBX, startSquareX+PPBX:endSquareX-1*PPBX ) = 1;
 output_args = APTemplate;
 end
 

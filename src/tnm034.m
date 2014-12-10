@@ -29,10 +29,10 @@ end
 %adaptive threshold image
 atImage = adaptivethres(double(BW));
 atImage_unfiltered = atImage;
-imshow(atImage);
+% imshow(atImage);
 atImage = medfilt2(atImage,[3 3]);
-figure;
-imshow(atImage);
+% figure;
+% imshow(atImage);
 
 
 [H, T, R] = hough(atImage);
@@ -53,33 +53,33 @@ height = size(atImage,1);
 [result_image_horizontal, qr_locations_horizontal] = locate_qr(atImage, false);
 [result_image_vertical, qr_locations_vertical] = locate_qr(atImage, true);
 
-figure;
-imshow(atImage);
-hold on;
-size(qr_locations_horizontal,2)
-for i=1:size(qr_locations_horizontal,2)
-    plot(qr_locations_horizontal(1,i),qr_locations_horizontal(2,i), '+');
-end
+% figure;
+% imshow(atImage);
+% hold on;
+% size(qr_locations_horizontal,2)
+% for i=1:size(qr_locations_horizontal,2)
+%     plot(qr_locations_horizontal(1,i),qr_locations_horizontal(2,i), '+');
+% end
+% 
+% size(qr_locations_vertical,2)
+% for i=1:size(qr_locations_vertical,2)
+%     plot(qr_locations_vertical(1,i),qr_locations_vertical(2,i), '+');
+% end
 
-size(qr_locations_vertical,2)
-for i=1:size(qr_locations_vertical,2)
-    plot(qr_locations_vertical(1,i),qr_locations_vertical(2,i), '+');
-end
-
-figure;
-imshow(result_image_horizontal);
-figure;
-imshow(result_image_vertical);
+% figure;
+% imshow(result_image_horizontal);
+% figure;
+% imshow(result_image_vertical);
 
 combined = result_image_horizontal + result_image_vertical;
-figure;
-imshow(combined);
+%figure;
+%imshow(combined);
 
 L = medfilt2(combined,[3 3]);
-figure, imshow(L)
+%figure, imshow(L)
 
 K = filter2(fspecial('average',3),combined);
-figure, imshow(K)
+%figure, imshow(K)
 
 %imshow(segment(:,ticker+4));
 
@@ -109,8 +109,12 @@ for i=1:size(D,1)
 end
 
 area_for_regions
-[a1, a2] = sort(area_for_regions(1,:), 'descend');
-sorted_areas = area_for_regions(:,a2)
+if(size(D,1) > 3)
+    [a1, a2] = sort(area_for_regions(1,:), 'descend');
+    sorted_areas = area_for_regions(:,a2)
+else
+    sorted_areas = area_for_regions
+end
 
 
 
@@ -170,14 +174,17 @@ P * xaxis
 px = P*xaxis
 theta = acos((P*xaxis)/Pn);
 thetaDegrees = rad2deg(theta)
+if(P(1)<0)
+    theta = -acos((P*xaxis)/Pn);
+    thetaDegrees = -thetaDegrees
+end
 
 
 Irotate = imrotate(BW, thetaDegrees);
 %Local threshold instead of adaptive
-level = graythresh(Irotate);
-Irotate = im2bw(Irotate, level);
 
-Irotate = adaptivethres(double(Irotate));
+
+%Irotate = adaptivethres(double(Irotate));
 costheta = cos(theta);
 sintheta = sin(theta);
 rotmatrix = [costheta -sintheta; sintheta costheta]'
@@ -219,38 +226,52 @@ plot(Pcorner3(2), Pcorner3(1), 'b+');
 
 
 %================================================================
-%                   CROP IMAGE BY CORNER POINTS
+%                   RESIZE RATIO
 %================================================================
-xlength = Pcorner3(2) - Pcorner1(2)
-ylength = Pcorner2(1) - Pcorner1(1)
+xLength = Pcorner3(2) - Pcorner1(2)
+yLength = Pcorner2(1) - Pcorner1(1)
+ratio = xLength/yLength
 
-Pcrop = [Pcorner1(1)+ylength, Pcorner1(2)+xlength]
-cropRange = [Pcorner1(2) Pcorner1(1) xlength ylength]
-Icrop = imcrop(Irotate, cropRange);
-figure;
-imshow(Icrop);
+
+if(ratio > 1)
+    %X is larger, scale Y
+    ratio = [size(Irotate,1)*ratio, size(Irotate,2)]
+elseif(ratio < 1)
+    %Y is larger, scale X
+    ratio = [size(Irotate,1), size(Irotate,2)*ratio]
+end
+%Irotate = imresize(Irotate, ratio, 'nearest');
+klarmedrot = 'klarmedrot'
+
+% figure;
+% imshow(Irotate);
+
+
 
 %================================================================
 %                   FIND AP MARK
 %================================================================
-APTemplate = getTemplateOfAP(Icrop);
-centerX = size(Icrop,2)/2;
-centerY = size(Icrop,1)/2;
+APTemplate = getTemplateOfAP(yLength, xLength);
+% figure;
+% imshow(APTemplate);
+centerX = round((Pcorner3(2) - Pcorner2(2))/2);
+centerY = round((Pcorner3(1) - Pcorner2(1))/2);
 %AP = normxcorr2(APTemplate, Icrop(ceil(centerY):size(Icrop,1), ceil(centerX):size(Icrop, 2)));
-AP = normxcorr2(APTemplate, Icrop);
+%AP = normxcorr2(APTemplate, Irotate(centerY:floor(centerY + yLength), centerX:floor(centerX + xLength)));
+AP = normxcorr2(APTemplate, Irotate);
 [i j] = find(AP==max(max(AP)));
-APpos = [i j]'
+APpos = [i j]';
+%APpos = APpos + Pcorner1 - [size(APTemplate,1)/2; size(APTemplate,1)/2]
 offsetAPX = size(APTemplate,2)/2;
 offsetAPY = size(APTemplate,1)/2;
-hold on;
-plot(j-offsetAPX,i-offsetAPY,'g+');
-figure;
-imshow(AP)
+APpos = APpos - [offsetAPY; offsetAPX];
+% figure;
+% imshow(AP)
 
 %================================================================
 %                   PERSPECTIVE DISTORTION
 %================================================================
-movingPoints = [Pcorner1 Pcorner2 Pcorner3 APpos]
+
 
 %Calculate fixed points
 %Start with P1_ _ _ _ P3
@@ -260,21 +281,79 @@ movingPoints = [Pcorner1 Pcorner2 Pcorner3 APpos]
 %           P2        
 %
 PPB = (Pcorner3(2) - Pcorner1(2))/41 % Pixel per block
+PPBX = (Pcorner3(2) - Pcorner1(2))/41 % Pixel per block in x
+PPBY = (Pcorner2(1) - Pcorner1(1))/41 % Pixel per block in y
 
 P1f = Pcorner1
-P2f = [PPB*41; P1f(2)]
-P3f = [P1f(1); PPB*41];
-PAPf = [(P2f(1)-7)*PPB;
-        (P3f(2)-7)*PPB
-        ]
-fixedPoints = [P1f P2f P3f PAPf]
+P2f = [P1f(1) + PPBY*41; P1f(2)]
+P3f = [P1f(1); P1f(2) + PPBX*41];
+PAPf = round([P2f(1)-7*PPBY + PPBY/2;
+        P3f(2)-7*PPBX + PPBX/2
+        ])
+    
+P4f = [P2f(1) P3f(2)]
+fixedPoints = [P1f P2f P3f PAPf]'
+movingPoints = [Pcorner1 Pcorner2 Pcorner3 APpos]'
+tform = fitgeotrans(movingPoints, fixedPoints, 'affine')
+[Iwarp, RB] = imwarp(Irotate, tform, 'bicubic');
+RB
+
+figure;
+imshow(Irotate);
+hold on;
+
+plot(P4f(2),P4f(1),'b+');
+plot(P1f(2),P1f(1),'b+');
+plot(P2f(2),P2f(1),'b+');
+plot(P3f(2),P3f(1),'b+');
+plot(j-offsetAPX,i-offsetAPY,'g+');
+plot(PAPf(2),PAPf(1),'r+');
+
+figure;
+imshow(Iwarp);
+hold on;
+plot(P4f(2),P4f(1),'b+');
+plot(P1f(2),P1f(1),'b+');
+plot(P2f(2),P2f(1),'b+');
+plot(P3f(2),P3f(1),'b+');
+plot(j-offsetAPX,i-offsetAPY,'g+');
+plot(PAPf(2),PAPf(1),'r+');
+
+
+%set in P4f instead of ,..
+
+
+%================================================================
+%                   CROP IMAGE BY CORNER POINTS
+%================================================================
+xlength = P3f(2) - P1f(2)
+ylength = P2f(1) - P1f(1)
+
+cropRange = [P1f(2) P1f(1) xlength ylength]
+Iwarp = imcrop(Iwarp, cropRange);
+figure;
+imshow(Iwarp);
+hold on;
+plot(P4f(2)-P1f(2),P4f(1)-P1f(1),'b+');
+plot(P1f(2)-P1f(2),P1f(1)-P1f(1),'b+');
+plot(P2f(2)-P1f(2),P2f(1)-P1f(1),'b+');
+plot(P3f(2)-P1f(2),P3f(1)-P1f(1),'b+');
+%plot(j-offsetAPX,i-offsetAPY,'g+');
+%plot(PAPf(2),PAPf(1),'r+');
+
+
+
+I2 = imcrop(Irotate, cropRange);
+figure;
+imshow(I2);
 
 
 %================================================================
 %                   TRANSLATE QR CODE TO STRING
 %================================================================
-
-finalstring = translate_qr(Icrop);
+level = graythresh(I2);
+Iwarp = im2bw(I2, level);
+finalstring = translate_qr(Iwarp);
 
 
 % Display & calculate the Hough matrix.
@@ -316,6 +395,6 @@ finalstring = translate_qr(Icrop);
 
 
 %strout=char(im);
-strout = AP;
+strout = finalstring;
 % 
 %%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,6 +1,8 @@
 function [ output_args ] = locate_corners(I, P, dir )
 %LOCATE_CORNERS Summary of this function goes here
 %   dir(x,y) direction of x and y
+    level = graythresh(I);
+    I = im2bw(I, level);
 
     colorSwitchWanted = 3;
     x = round(P(1,2));

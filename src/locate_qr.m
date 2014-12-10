@@ -3,8 +3,8 @@ function [ result_image, qr_locations ] = locate_qr( in, verticalDirection )
 %   Detailed explanation goes here
     if(verticalDirection)
         in = in'; % Transpose the image if we want to check vertically, instead of rewriting the loop for that case
-        figure;
-        imshow(in);
+%         figure;
+%         imshow(in);
     end
     
     
