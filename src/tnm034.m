@@ -148,8 +148,6 @@ elseif(ratio < 1)
     ratio = [size(Irotate,1), size(Irotate,2)*ratio]
 end
 %Irotate = imresize(Irotate, ratio, 'nearest');
-klarmedrot = 'klarmedrot'
-
 % figure;
 % imshow(Irotate);
 
@@ -199,22 +197,31 @@ PAPf = round([P2f(1)-7*PPBY + PPBY/2;
         ])
     
 P4f = [P2f(1) P3f(2)]
-fixedPoints = [P1f P2f P3f PAPf]'
-movingPoints = [Pcorner1 Pcorner2 Pcorner3 APpos]'
-tform = fitgeotrans(movingPoints, fixedPoints, 'affine')
-[Iwarp, RB] = imwarp(Irotate, tform, 'bicubic');
+%fixedPoints = [P1f P2f P3f PAPf]'
+%movingPoints = [Pcorner1 Pcorner2 Pcorner3 APpos]'
+
+fixedPoints = [P1f P3f P2f PAPf]'
+movingPoints = [Pcorner1 Pcorner3 Pcorner2 APpos]'
+
+tform = fitgeotrans(movingPoints, fixedPoints, 'projective')
+[Iwarp, RB] = imwarp(Irotate, tform, 'nearest');
 RB
 
 figure;
 imshow(Irotate);
 hold on;
 
-plot(P4f(2),P4f(1),'b+');
-plot(P1f(2),P1f(1),'b+');
-plot(P2f(2),P2f(1),'b+');
-plot(P3f(2),P3f(1),'b+');
 plot(j-offsetAPX,i-offsetAPY,'g+');
 plot(PAPf(2),PAPf(1),'r+');
+plot(Pcorner1(2), Pcorner1(1), 'r+');
+plot(Pcorner2(2), Pcorner2(1), 'g+');
+plot(Pcorner3(2), Pcorner3(1), 'b+');
+plot(P4f(2),P4f(1),'b+');
+plot(P1f(2),P1f(1),'ro');
+plot(P2f(2),P2f(1),'go');
+plot(P3f(2),P3f(1),'bo');
+
+
 
 figure;
 imshow(Iwarp);
