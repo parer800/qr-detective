@@ -2,10 +2,10 @@ function [ output_args ] = getTemplateOfAP( h, w )
 
 nrOfBlocks = 41;
 
-PPBX = w/nrOfBlocks %PPBX - PixelsPerBlockX
-PPBY = h/nrOfBlocks %PPBY - PixelsPerBlockY
+PPBX = w/nrOfBlocks; %PPBX - PixelsPerBlockX
+PPBY = h/nrOfBlocks; %PPBY - PixelsPerBlockY
 
-ratioOfAP = (1+1+1+1+1) %Ratio of blocks in AP is 1:1:1:1:1 
+ratioOfAP = (1+1+1+1+1); %Ratio of blocks in AP is 1:1:1:1:1 
 
 APTemplate = ones(round(PPBY*ratioOfAP), round(PPBX*ratioOfAP));
 PPBX = size(APTemplate,2)/ratioOfAP;

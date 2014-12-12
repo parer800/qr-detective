@@ -2,8 +2,8 @@ function [ output_args ] = translate_qr(I)
 %TRANSLATE_QR Summary of this function goes here
 %   Detailed explanation goes here
 
-figure;
-imshow(I);
+% figure;
+% imshow(I);
 
 cropWidth = size(I,2);
 cropHeight = size(I,1);
@@ -15,12 +15,12 @@ centerpointY = round(pixelsPerBlockY/2);
 %pixelsPerBlockX = round(pixelsPerBlockX);
 %pixelsPerBlockY = round(pixelsPerBlockY);
 
-hold on;
+% hold on;
 ticker = 1;
 
 centerOfApX = cropWidth-7*pixelsPerBlockX + centerpointX;
 centerOfApY = cropHeight-7*pixelsPerBlockY + centerpointY;
-plot(centerOfApX, centerOfApY, 'g+');
+% plot(centerOfApX, centerOfApY, 'g+');
 
 bitsequence = '';
 bitticker = 0;
@@ -50,20 +50,20 @@ for x=centerpointX:pixelsPerBlockX:cropWidth
                 bitsequence = [bitsequence num2str(I(round(y),round(x)))];
                 bitticker = bitticker+1;
                 
-                plot(round(x), round(y), 'r.');
+                %plot(round(x), round(y), 'r.');
             end
         elseif(x + pixelsPerBlockX*FIP_ratio < cropWidth)
             %READ
             bitsequence = [bitsequence num2str(I(round(y),round(x)))];
             bitticker = bitticker+1;
-            plot(round(x), round(y), 'r.');
+            %plot(round(x), round(y), 'r.');
             
         else
             if(y>=pixelsPerBlockY*FIP_ratio)
                 %READ
                 bitsequence = [bitsequence num2str(I(round(y),round(x)))];
                 bitticker = bitticker+1;
-                plot(round(x), round(y), 'r.');
+               % plot(round(x), round(y), 'r.');
             end
             continue;
 

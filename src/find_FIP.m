@@ -4,7 +4,7 @@ function [ P1, P2, P3 ] = find_FIP( L )
 connected = bwlabel(L);
 
 
-D = regionprops(connected, 'Area')
+D = regionprops(connected, 'Area');
 area_for_regions = zeros(2, size(D,1));
 
 for i=1:size(D,1)
@@ -13,26 +13,25 @@ end
 
 if(size(D,1) > 3)
     [a1, a2] = sort(area_for_regions(1,:), 'descend');
-    sorted_areas = area_for_regions(:,a2)
+    sorted_areas = area_for_regions(:,a2);
 else
-    sorted_areas = area_for_regions
+    sorted_areas = area_for_regions;
 end
 
 cc = bwconncomp(L);
-s = regionprops(cc, 'PixelIdxList', 'Area')
-areasss = s.Area
+s = regionprops(cc, 'PixelIdxList', 'Area');
 
 [r, c] = find(connected == sorted_areas(2,1));
 rc = [r c];
-P1 = mean(rc)'
+P1 = mean(rc)';
 
 [r, c] = find(connected == sorted_areas(2,2));
 rc = [r c];
-P2 = mean(rc)'
+P2 = mean(rc)';
 
 [r, c] = find(connected == sorted_areas(2,3));
-rc = [r c]
-P3 = mean(rc)'
+rc = [r c];
+P3 = mean(rc)';
 
 %Check which point should be P1 and P2
 P21 = P2-P1;

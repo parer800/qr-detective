@@ -1,8 +1,8 @@
 %Extension of the Weller's method [Wellner 1993]
 
 function bw = adaptivethres(in)
-    w = size(in,1)
-    h = size(in,2)
+    w = size(in,1);
+    h = size(in,2);
     %calculate integral image
     intImg = integralImage(in);
     s=w/8;
