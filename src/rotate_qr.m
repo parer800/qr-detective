@@ -23,7 +23,7 @@ end
 theta
 thetaDegrees
 
-Irotate = imrotate(I, thetaDegrees); % rotate image by degrees
+Irotate = imrotate(I, thetaDegrees, 'bicubic'); % rotate image by degrees
 
 costheta = cos(theta);
 sintheta = sin(theta);

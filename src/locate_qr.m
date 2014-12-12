@@ -9,7 +9,7 @@ function [ result_image, qr_locations ] = locate_qr( in, verticalDirection )
     
     
     function A = swap_rows(A,i,j)
-       % assert(i > 0 && i < size(A,1) && j > 0 && j < size(A,1) );
+       %function to swap rows
         TEMP = A([j i], :);
         A([i j], :) = TEMP; % Notice the difference of i & j
     end
@@ -72,7 +72,7 @@ function [ result_image, qr_locations ] = locate_qr( in, verticalDirection )
         [mValue, mIndex] = max(block(4,:)); % get max value of sequence_count and its index, max should be the centered value in the ratio sequence 1:1:[3]:1:1
 
         if(mIndex ~= centerIndex)
-            continue; %continue if maxvalue is not centered
+            continue; %continue if maxvalue is not centered, think of FIP ratio 1:1:3:1:1
         end
 
         c = centerBlock(4);
@@ -105,19 +105,19 @@ function [ result_image, qr_locations ] = locate_qr( in, verticalDirection )
 
         %Possible qr code store middle position
 
-        x1 = centerBlock(1) - round(centerBlock(4)/2);
+        x1 = centerBlock(1) - round(centerBlock(4)/2); % Centerblocks x position - the length of the segment divided by 2. 
 
         y1 = centerBlock(2);
 
         position = [x1; y1];
-        qr_locations = [qr_locations, position];
+        qr_locations = [qr_locations, position]; % Append the qr_locations
         result_image(y1,x1) = 1.0;
 
     end
     
     if(verticalDirection)
         result_image = result_image'; % Transpose the image if we want to check vertically, instead of rewriting the loop for that case
-        qr_locations = swap_rows(qr_locations, 1,2);
+        qr_locations = swap_rows(qr_locations, 1,2); % Swap rows in qr_location if it was vertically checked.
     end
 
 
