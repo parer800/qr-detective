@@ -73,45 +73,53 @@ function [ result_image, qr_locations ] = locate_qr( in, verticalDirection )
 
         if(mIndex ~= centerIndex)
             continue; %continue if maxvalue is not centered, think of FIP ratio 1:1:3:1:1
-        end
-
-        c = centerBlock(4);
-        qr_flag = -1;
-
-        for j=1:2
-            l = block(4,centerIndex - j); %left value
-            r = block(4,centerIndex + j); %right value
-            lc = c/l; %center-left ratio
-            rc = c/r; %center-right ratio
-            cn = 3; %Normalized center weight
-            faultPercentage = 1.5;
-
-            cnlc = abs(cn-lc);
-            cnrc = abs(cn-rc);
-
-            if( cnlc > faultPercentage || cnrc > faultPercentage)
+        else
+            %The max sequence counter of colors is centered, moving on...
+            centerColor = centerBlock(3);
+            if(centerColor == 0)
+                %Only look further if center color is black
+                c = centerBlock(4); %Number of pixel for specific color
                 qr_flag = -1;
-                break;
-            else
-                qr_flag = 1;
+
+                for j=1:2
+                    l = block(4,centerIndex - j); %left value
+                    r = block(4,centerIndex + j); %right value
+                    lc = c/l; %center-left ratio
+                    rc = c/r; %center-right ratio
+                    cn = 3; %Normalized center weight
+                    faultPercentage = 1.3;
+
+                    cnlc = abs(cn-lc);
+                    cnrc = abs(cn-rc);
+
+                    if( cnlc > faultPercentage || cnrc > faultPercentage)
+                        qr_flag = -1;
+                        break;
+                    else
+                        qr_flag = 1;
+                    end
+                end
+
+                if(qr_flag == -1)
+                    continue;
+                end
+
+
+
+                %Possible qr code store middle position
+
+                x1 = centerBlock(1) - ceil(centerBlock(4)/2); % Centerblocks x position - the length of the segment divided by 2. 
+                x2 = centerBlock(1) - floor(centerBlock(4)/2); % Centerblocks x position - the length of the segment divided by 2.
+                y1 = centerBlock(2);
+
+                position = [x1; y1];
+                qr_locations = [qr_locations, position]; % Append the qr_locations
+                position = [x2; y1];
+                qr_locations = [qr_locations, position]; % Append the qr_locations
+                result_image(y1,x1) = 1.0;
+               % result_image(y1,x2) = 1.0;
             end
         end
-
-        if(qr_flag == -1)
-            continue;
-        end
-
-
-
-        %Possible qr code store middle position
-
-        x1 = centerBlock(1) - round(centerBlock(4)/2); % Centerblocks x position - the length of the segment divided by 2. 
-
-        y1 = centerBlock(2);
-
-        position = [x1; y1];
-        qr_locations = [qr_locations, position]; % Append the qr_locations
-        result_image(y1,x1) = 1.0;
 
     end
     

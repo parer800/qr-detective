@@ -33,9 +33,6 @@ atImage = medfilt2(atImage,[3 3]);
 % imshow(atImage);
 
 
-[H, T, R] = hough(atImage);
-
-
 % Display the original image.
 % subplot(2,1,1);
 % figure;
@@ -63,18 +60,18 @@ height = size(atImage,1);
 % for i=1:size(qr_locations_vertical,2)
 %     plot(qr_locations_vertical(1,i),qr_locations_vertical(2,i), '+');
 % end
-
+% 
 % figure;
 % imshow(result_image_horizontal);
 % figure;
 % imshow(result_image_vertical);
 
 combined = result_image_horizontal + result_image_vertical;
-%figure;
-%imshow(combined);
+% figure;
+% imshow(combined);
 
-L = medfilt2(combined,[3 3]);
-%figure, imshow(L)
+L = medfilt2(combined,[2 2]);
+% figure, imshow(L)
 
 K = filter2(fspecial('average',3),combined); % <--- Not used
 
@@ -97,21 +94,25 @@ K = filter2(fspecial('average',3),combined); % <--- Not used
 % plot(P3(2), P3(1), 'bo');
 
 
+debug_find_fip = -1;
+
+
+
 %================================================================
 %                   ROTATE BY FIP POINTS [P1 P2 P3]
 %================================================================
 
 [Irotate, Prot] = rotate_qr(BW, P1, P2, P3);
 
-%figure;
-%imshow(Irotate);
+% figure;
+% imshow(Irotate);
 % hold on;
 % plot(Prot(1,2), Prot(1,1), 'ro');
 % plot(Prot(2,2), Prot(2,1), 'go');
 % plot(Prot(3,2), Prot(3,1), 'bo');
 
 
-
+if (debug_find_fip ~= 1)
 %================================================================
 %                   FIND CORNER POINTS
 %================================================================
@@ -249,7 +250,7 @@ PAPf = flip(PAPf);
 movingPoints = flip(movingPoints');
 %figure;
 %imshow(Irotate);
-hold on;
+%hold on;
 
 %plot(j-offsetAPX,i-offsetAPY,'g+');
 %plot(PAPf(2),PAPf(1),'r+');
@@ -384,8 +385,10 @@ finalstring = translate_qr(Iwarp);
 % % highlight the longest line segment
 % plot(xy_long(:,1),xy_long(:,2),'LineWidth',2,'Color','blue');
 
+else
+    finalstring = 'debug';
 
-
+end
 
 
 %strout=char(im);

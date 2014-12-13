@@ -10,10 +10,30 @@ area_for_regions = zeros(2, size(D,1));
 for i=1:size(D,1)
     area_for_regions(:,i) = [D(i).Area, i]'; 
 end
-
+%area_for_regions
 if(size(D,1) > 3)
-    [a1, a2] = sort(area_for_regions(1,:), 'descend');
-    sorted_areas = area_for_regions(:,a2);
+    %sort from the 2 position backwards
+    upper_row = area_for_regions(1,:);
+    area_for_regions(1,:) = (upper_row-0.2*max(upper_row))/max(upper_row); % Normalize the values, remove 20% of the maxvalue to guarantee correct points
+    area_for_regions(1,:) = round(area_for_regions(1,:));
+    
+    wanted_nr_points = 3;
+    counter = 1;
+    points = [];
+    while(wanted_nr_points)
+       if(area_for_regions(1,counter) == 1)
+        points = [points [1;area_for_regions(2,counter)]];
+        wanted_nr_points = wanted_nr_points-1;
+       end
+       counter = counter+1;
+    
+    end
+    
+    
+    %[a1, a2] = sort(area_for_regions(1,3:length(area_for_regions)), 'descend');
+    %a2 = a2 + 2;
+    %area_for_regions(:,3:length(area_for_regions)) = area_for_regions(:,a2);
+    sorted_areas = points;
 else
     sorted_areas = area_for_regions;
 end

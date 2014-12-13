@@ -1,6 +1,9 @@
 function [ Irotate, Prot] = rotate_qr( I, P1, P2, P3 )
 %ROTATE_QR Summary of this function goes here
 %   Detailed explanation goes here
+% P1
+% P2
+% P3
 width = size(I,2);
 height = size(I,1);
 
