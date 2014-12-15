@@ -38,9 +38,6 @@ else
     sorted_areas = area_for_regions;
 end
 
-cc = bwconncomp(L);
-s = regionprops(cc, 'PixelIdxList', 'Area');
-
 [r, c] = find(connected == sorted_areas(2,1));
 rc = [r c];
 P1 = mean(rc)';

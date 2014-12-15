@@ -11,9 +11,6 @@ P = (P3-P1)';
 Pn = norm(P);
 xaxis = [0 1]';
 
-
-P * xaxis;
-px = P*xaxis;
 theta = acos((P*xaxis)/Pn);
 thetaDegrees = rad2deg(theta);
 %Check negative direction
@@ -39,17 +36,6 @@ Prot = Ptot * rotmatrix;
 
 Prot(:,2) = Prot(:,2) + xmiddle;
 Prot(:,1) = Prot(:,1) + ymiddle;
-
-% figure;
-% imshow(Irotate);
-% hold on;
-% plot(Prot(1,2), Prot(1,1), 'ro');
-% plot(Prot(2,2), Prot(2,1), 'go');
-% plot(Prot(3,2), Prot(3,1), 'bo');
-
-P1 = Prot(1,:);
-P2 = Prot(2,:);
-P3 = Prot(3,:);
 
 end
 

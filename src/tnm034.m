@@ -47,54 +47,34 @@ height = size(atImage,1);
    
 [result_image_horizontal, qr_locations_horizontal] = locate_qr(atImage, false);
 [result_image_vertical, qr_locations_vertical] = locate_qr(atImage, true);
-
-% figure;
-% imshow(atImage);
-% hold on;
-% size(qr_locations_horizontal,2)
-% for i=1:size(qr_locations_horizontal,2)
-%     plot(qr_locations_horizontal(1,i),qr_locations_horizontal(2,i), '+');
-% end
 % 
-% size(qr_locations_vertical,2)
-% for i=1:size(qr_locations_vertical,2)
-%     plot(qr_locations_vertical(1,i),qr_locations_vertical(2,i), '+');
-% end
+%  figure;
+%  imshow(atImage);
 % 
-% figure;
-% imshow(result_image_horizontal);
-% figure;
-% imshow(result_image_vertical);
-
 combined = result_image_horizontal + result_image_vertical;
-% figure;
-% imshow(combined);
+%  figure;
+%  imshow(combined);
 
 L = medfilt2(combined,[2 2]);
-% figure, imshow(L)
-
-K = filter2(fspecial('average',3),combined); % <--- Not used
-
-%Hopefully we found 3 components which match our criteria
-[i, j] = find(L);
+ %figure, imshow(L)
 
 
 
 
 %================================================================
-%                   SELECT 3 BIGGEST REGIONS
+%                   FIND FIDUCIAL MARKS (CENTER POINTS)
 %================================================================
 [P1, P2, P3] = find_FIP(L);
 
-%figure;
-%imshow(I);
+% figure;
+% imshow(I);
 % hold on;
 % plot(P1(2), P1(1), 'ro');
 % plot(P2(2), P2(1), 'go');
 % plot(P3(2), P3(1), 'bo');
 
 
-debug_find_fip = -1;
+
 
 
 
@@ -104,14 +84,15 @@ debug_find_fip = -1;
 
 [Irotate, Prot] = rotate_qr(BW, P1, P2, P3);
 
-% figure;
-% imshow(Irotate);
-% hold on;
-% plot(Prot(1,2), Prot(1,1), 'ro');
-% plot(Prot(2,2), Prot(2,1), 'go');
-% plot(Prot(3,2), Prot(3,1), 'bo');
+figure;
+imshow(Irotate);
+hold on;
+plot(Prot(1,2), Prot(1,1), 'ro');
+plot(Prot(2,2), Prot(2,1), 'go');
+plot(Prot(3,2), Prot(3,1), 'bo');
 
-
+%Just to debug finding FIP center point.
+debug_find_fip = -1;
 if (debug_find_fip ~= 1)
 %================================================================
 %                   FIND CORNER POINTS
@@ -129,33 +110,9 @@ Pcorner3 = locate_corners(Irotate, Prot(3,:), [1, -1]);
 
 
 %================================================================
-%                   RESIZE RATIO, Not necessary, can use pixel per block in
-%                   both row and col direction.
-%================================================================
-xLength = Pcorner3(2) - Pcorner1(2);
-yLength = Pcorner2(1) - Pcorner1(1);
-ratio = xLength/yLength;
-
-
-if(ratio > 1)
-    %X is larger, scale Y
-    ratio = [size(Irotate,1)*ratio, size(Irotate,2)];
-elseif(ratio < 1)
-    %Y is larger, scale X
-    ratio = [size(Irotate,1), size(Irotate,2)*ratio];
-end
-%Irotate = imresize(Irotate, ratio, 'nearest');
-% figure;
-% imshow(Irotate);
-
-
-
-%================================================================
 %                   FIND AP MARK
 %================================================================
 APTemplate = getTemplateOfAP(yLength, xLength);
-% figure;
-% imshow(APTemplate);
 centerX = ceil((Pcorner3(2) - Pcorner2(2))/2);
 centerY = ceil((Pcorner2(1) - Pcorner3(1))/2);
 w = size(Irotate,2);
@@ -174,8 +131,6 @@ APpos = [i j]';
 offsetAPX = size(APTemplate,2)/2;
 offsetAPY = size(APTemplate,1)/2;
 APpos = APpos - [offsetAPY; offsetAPX];
-%figure;
-%imshow(AP)
 
 %================================================================
 %                   PERSPECTIVE DISTORTION
@@ -189,17 +144,16 @@ APpos = APpos - [offsetAPY; offsetAPX];
 %           |     
 %           P2        
 %
-PPB = (Pcorner3(2) - Pcorner1(2))/41; % Pixel per block
 PPBX = (Pcorner3(2) - Pcorner1(2))/41; % Pixel per block in x
 PPBY = (Pcorner2(1) - Pcorner1(1))/41; % Pixel per block in y
 
 % BY FIP MARK
-P1f = round(Prot(1,:))';
-P2f = [P1f(1) + PPBY*(41-7); P1f(2)];
-P3f = [P1f(1); P1f(2) + PPBX*(41-7)];
-PAPf = round([P2f(1)-7*PPBY + PPBY/2;
-        P3f(2)-7*PPBX + PPBX/2
-        ]);
+% P1f = round(Prot(1,:))';
+% P2f = [P1f(1) + PPBY*(41-7); P1f(2)];
+% P3f = [P1f(1); P1f(2) + PPBX*(41-7)];
+% PAPf = round([P2f(1)-7*PPBY + PPBY/2;
+%         P3f(2)-7*PPBX + PPBX/2
+%         ]);
 
 fipPoints = [P1f P2f P3f];
     
@@ -207,23 +161,21 @@ fipPoints = [P1f P2f P3f];
 P1f = Pcorner1;
 P2f = [P1f(1) + PPBY*41; P1f(2)];
 P3f = [P1f(1); P1f(2) + PPBX*41];
-PAPf = round([P2f(1)-7*PPBY + PPBY/2;
-        P3f(2)-7*PPBX + PPBX/2
-        ]);
+% PAPf = round([P2f(1)-7*PPBY + PPBY/2;
+%         P3f(2)-7*PPBX + PPBX/2
+%         ]);
    
-
+%The alignment patter center point if the new center point of the fiducial
+%marks should be in the fixed corner points. This will expand the QR-code
+%image.
 PAPf = round( [ P2f(1)-3.5*PPBY; P3f(2)-3.5*PPBX ]);
  
+%FLIP THE VALUES, REQUIRED...
 P1f = flip(P1f);
 P2f = flip(P2f);
 P3f = flip(P3f);
 PAPf = flip(PAPf);
 
-
-
-P4f = [P2f(1) P3f(2)];
-%fixedPoints = [P1f P2f P3f PAPf]'
-%movingPoints = [Pcorner1 Pcorner2 Pcorner3 APpos]'
 
 fixedPoints = round([P1f P2f P3f PAPf]');
 movingPoints = [round(Prot(1,:))' round(Prot(2,:))' round(Prot(3,:))' APpos];
@@ -231,15 +183,11 @@ movingPoints = flip(movingPoints)';
 
 cornerPoints = flip([Pcorner1, Pcorner2, Pcorner3])';
 fipPoints = flip(fipPoints)';
-%tform = fitgeotrans(movingPoints, fixedPoints, 'projective')
-%[Iwarp, RB] = imwarp(Irotate, tform, 'linear', 'outputview', imref2d(size(Irotate)), 'fillvalues', 1);
-%RB
 
 tform = cp2tform(movingPoints, fixedPoints, 'projective');
 predicted_corner_points = tformfwd(tform, cornerPoints);
 predicted_fip_points = tformfwd(tform, fipPoints);
 correctCornerPoints = flip(predicted_corner_points')';
-correctFipPoints = flip(predicted_fip_points')';
 [row, col] = size(Irotate);
 Iwarp = imtransform(Irotate, tform, 'XData', [1 col], 'YData', [1 row]);
 
@@ -248,19 +196,19 @@ P2f = flip(P2f);
 P3f = flip(P3f);
 PAPf = flip(PAPf);
 movingPoints = flip(movingPoints');
-%figure;
-%imshow(Irotate);
-%hold on;
+figure;
+imshow(Irotate);
+hold on;
 
-%plot(j-offsetAPX,i-offsetAPY,'g+');
-%plot(PAPf(2),PAPf(1),'r+');
-%plot(Pcorner1(2), Pcorner1(1), 'r+');
-%plot(Pcorner2(2), Pcorner2(1), 'g+');
-%plot(Pcorner3(2), Pcorner3(1), 'b+');
+plot(APpos(2),APpos(1),'g+');
+plot(PAPf(2),PAPf(1),'ro');
+% plot(Pcorner1(2), Pcorner1(1), 'g+');
+% plot(Pcorner2(2), Pcorner2(1), 'g+');
+% plot(Pcorner3(2), Pcorner3(1), 'g+');
 
-% plot(Prot(1,2), Prot(1,1), 'g+');
-% plot(Prot(2,2), Prot(2,1), 'g+');
-% plot(Prot(3,2), Prot(3,1), 'g+');
+plot(Prot(1,2), Prot(1,1), 'g+');
+plot(Prot(2,2), Prot(2,1), 'g+');
+plot(Prot(3,2), Prot(3,1), 'g+');
 % 
 % 
 % plot(Pcorner1(2), Pcorner1(1), 'go');
@@ -270,18 +218,25 @@ movingPoints = flip(movingPoints');
 % 
 % 
 % plot(P4f(2),P4f(1),'b+');
-% plot(P1f(2),P1f(1),'ro');
-% plot(P2f(2),P2f(1),'ro');
-% plot(P3f(2),P3f(1),'ro');
+plot(P1f(2),P1f(1),'ro');
+plot(P2f(2),P2f(1),'ro');
+plot(P3f(2),P3f(1),'ro');
 % 
 % 
 % 
-% %figure;
-% %imshow(Iwarp);
-% hold on;
-% plot(P1f(2),P1f(1),'b+');
-% plot(P2f(2),P2f(1),'b+');
-% plot(P3f(2),P3f(1),'b+');
+figure;
+imshow(Iwarp);
+hold on;
+plot(APpos(2),APpos(1),'g+');
+plot(PAPf(2),PAPf(1),'ro');
+
+plot(Prot(1,2), Prot(1,1), 'g+');
+plot(Prot(2,2), Prot(2,1), 'g+');
+plot(Prot(3,2), Prot(3,1), 'g+');
+
+plot(P1f(2),P1f(1),'ro');
+plot(P2f(2),P2f(1),'ro');
+plot(P3f(2),P3f(1),'ro');
 % plot(j-offsetAPX,i-offsetAPY,'g+');
 % plot(PAPf(2),PAPf(1),'r+');
 % 
@@ -308,13 +263,13 @@ Pcorner3 = flip([correctCornerPoints(3,2),correctCornerPoints(3,1)]);
 
 
 Pcorner1 = locate_corners(Iwarp, P1f', [-1, -1]);
-%plot(P1f(2), P1f(1), 'r+');
+plot(Pcorner1(2), Pcorner1(1), 'y+');
 
 Pcorner2 = locate_corners(Iwarp, P2f', [-1, 1]);
-%plot(P2f(2), P2f(1), 'g+');
+plot(Pcorner2(2), Pcorner2(1), 'y+');
 
 Pcorner3 = locate_corners(Iwarp, P3f', [1, -1]);
-%plot(P3f(2), P3f(1), 'b+');
+plot(Pcorner3(2), Pcorner3(1), 'y+');
 
 
 
@@ -326,8 +281,8 @@ ylength = Pcorner2(1) - Pcorner1(1);
 
 cropRange = [Pcorner1(2) Pcorner1(1) xlength ylength];
 Iwarp = imcrop(Iwarp, cropRange);
-%figure;
-% imshow(Iwarp);
+figure;
+imshow(Iwarp);
 % hold on;
 % plot(P4f(2)-P1f(2),P4f(1)-P1f(1),'b+');
 % plot(P1f(2)-P1f(2),P1f(1)-P1f(1),'b+');
