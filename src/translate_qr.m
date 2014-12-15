@@ -41,20 +41,20 @@ for x=centerpointX:pixelsPerBlockX:cropWidth
                 bitsequence = [bitsequence num2str(I(round(y),round(x)))];
                 bitticker = bitticker+1;
                 
-                plot(round(x), round(y), 'r.');
+                %plot(round(x), round(y), 'r.');
             end
         elseif(x + pixelsPerBlockX*FIP_ratio < cropWidth)
             %READ
             bitsequence = [bitsequence num2str(I(round(y),round(x)))];
             bitticker = bitticker+1;
-            plot(round(x), round(y), 'r.');
+            %plot(round(x), round(y), 'r.');
             
         else
             if(y>=pixelsPerBlockY*FIP_ratio)
                 %READ
                 bitsequence = [bitsequence num2str(I(round(y),round(x)))];
                 bitticker = bitticker+1;
-                plot(round(x), round(y), 'r.');
+               % plot(round(x), round(y), 'r.');
             end
             continue;
 

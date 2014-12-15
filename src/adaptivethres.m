@@ -1,6 +1,5 @@
-%Extension of the Weller's method [Wellner 1993]
-
 function bw = adaptivethres(in)
+    %This is the most time consuming, should be optimized...
     w = size(in,1);
     h = size(in,2);
     %calculate integral image
