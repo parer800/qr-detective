@@ -10,7 +10,7 @@ function strout = tnm034(im)
 % Your program code.
 %
 
-I = imread(im);
+I = im;
 
 %Get dimensions, to check if 
 [x,y,z] = size(I);
